@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:real_time/configuration_screen.dart';
 import 'package:vibration/vibration.dart';
 import 'cubit/asl_detection_cubit.dart';
 import 'models/asl_detection_state.dart';
@@ -173,6 +174,16 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
         title: const Text('ASL Detection'),
         backgroundColor: Colors.black87,
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ConfigurationScreen()),
+              );
+            },
+            icon: const Icon(Icons.tune),
+            tooltip: 'Configure Commands',
+          ),
           IconButton(
             onPressed: _showVibrationSettings,
             icon: BlocBuilder<ASLDetectionCubit, ASLDetectionState>(

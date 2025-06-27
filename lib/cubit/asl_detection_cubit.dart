@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:real_time/services/command_executor.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import 'package:vibration/vibration.dart';
@@ -102,6 +103,8 @@ class ASLDetectionCubit extends Cubit<ASLDetectionState> {
     }
   }
 
+
+
   void _handleWebSocketMessage(dynamic data) {
     try {
       final Map<String, dynamic> message = jsonDecode(data);
@@ -126,6 +129,9 @@ class ASLDetectionCubit extends Cubit<ASLDetectionState> {
       if (currentAction != null && currentAction != _lastDetectedAction) {
         _lastDetectedAction = currentAction;
         shouldVibrate = true;
+
+        CommandExecutor.executeCommand(currentAction); // ✅ EXECUTE COMMAND HERE
+
         _triggerActionCompletedVibration(currentAction); // Longer vibration for completed action
       }
 
@@ -143,6 +149,7 @@ class ASLDetectionCubit extends Cubit<ASLDetectionState> {
       print('❌ Error parsing WebSocket message: $e');
     }
   }
+
 
 // Add these new methods to the class:
   int _lastSequenceLength = 0;
