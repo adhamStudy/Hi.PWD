@@ -111,17 +111,27 @@ class ASLDetectionCubit extends Cubit<ASLDetectionState> {
       }
 
       final String? currentAction = message['last_action'];
-      bool shouldVibrate = false;
+      final List<String> currentBuffer = List<String>.from(message['sequence_buffer'] ?? []);
 
+      // Check for sign acceptance (when buffer changes)
+      bool signAccepted = false;
+      if (currentBuffer.length > _lastSequenceLength) {
+        signAccepted = true;
+        _triggerSignAcceptedVibration(); // Small vibration for sign acceptance
+      }
+      _lastSequenceLength = currentBuffer.length;
+
+      // Check for action completion
+      bool shouldVibrate = false;
       if (currentAction != null && currentAction != _lastDetectedAction) {
         _lastDetectedAction = currentAction;
         shouldVibrate = true;
-        _triggerVibration(currentAction);
+        _triggerActionCompletedVibration(currentAction); // Longer vibration for completed action
       }
 
       emit(ASLDetectionUpdated(
         currentSign: message['current_sign'] ?? '00000',
-        sequenceBuffer: List<String>.from(message['sequence_buffer'] ?? []),
+        sequenceBuffer: currentBuffer,
         lastAction: currentAction,
         movement: (message['movement'] ?? 0.0).toDouble(),
         isStable: message['is_stable'] ?? false,
@@ -130,7 +140,49 @@ class ASLDetectionCubit extends Cubit<ASLDetectionState> {
       ));
 
     } catch (e) {
-      print('Error parsing WebSocket message: $e');
+      print('❌ Error parsing WebSocket message: $e');
+    }
+  }
+
+// Add these new methods to the class:
+  int _lastSequenceLength = 0;
+
+  Future<void> _triggerSignAcceptedVibration() async {
+    if (!_vibrationEnabled) return;
+
+    try {
+      // Short, gentle vibration for sign acceptance
+      await Vibration.vibrate(duration: 100, amplitude: 50);
+      print('📳 Sign accepted - light vibration');
+    } catch (e) {
+      print('❌ Sign vibration error: $e');
+    }
+  }
+
+  Future<void> _triggerActionCompletedVibration(String action) async {
+    if (!_vibrationEnabled) return;
+
+    try {
+      final hasCustomVibrations = await Vibration.hasCustomVibrationsSupport();
+
+      if (hasCustomVibrations == true) {
+        if (action.toLowerCase().contains('call')) {
+          // Double vibration for calls
+          await Vibration.vibrate(pattern: [0, 200, 100, 200], intensities: [0, 128, 0, 255]);
+        } else if (action.toLowerCase().contains('open')) {
+          // Single strong vibration for opening apps
+          await Vibration.vibrate(duration: 300, amplitude: 200);
+        } else {
+          // Triple short vibration for other actions
+          await Vibration.vibrate(pattern: [0, 100, 50, 100, 50, 100], intensities: [0, 128, 0, 128, 0, 128]);
+        }
+      } else {
+        await Vibration.vibrate(duration: 200);
+      }
+
+      print('📳 Action completed - full vibration pattern');
+    } catch (e) {
+      print('❌ Action vibration error: $e');
     }
   }
 
