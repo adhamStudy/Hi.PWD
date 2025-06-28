@@ -6,24 +6,27 @@ import 'package:real_time/configuration_screen.dart';
 import 'package:vibration/vibration.dart';
 import 'cubit/asl_detection_cubit.dart';
 import 'models/asl_detection_state.dart';
-import 'widgets/camera_view.dart';
 import 'widgets/detection_overlay.dart';
 import 'widgets/command_list.dart';
 import 'widgets/server_connection_dialog.dart';
 
 class ASLDetectionScreen extends StatefulWidget {
   final CameraDescription camera;
+  final List<CameraDescription> availableCameras;
 
-  const ASLDetectionScreen({Key? key, required this.camera}) : super(key: key);
+  const ASLDetectionScreen({
+    Key? key,
+    required this.camera,
+    required this.availableCameras,
+  }) : super(key: key);
 
   @override
   State<ASLDetectionScreen> createState() => _ASLDetectionScreenState();
 }
 
 class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
-  CameraController? _cameraController;
-  bool _isCameraInitialized = false;
   bool _permissionGranted = false;
+  bool _isInitializing = false;
 
   @override
   void initState() {
@@ -38,12 +41,45 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
       setState(() {
         _permissionGranted = true;
       });
-      await _initializeCamera();
-      if (mounted) {
-        context.read<ASLDetectionCubit>().connect();
-      }
+      await _initializeCameraAndConnect();
     } else {
       _showPermissionDialog();
+    }
+  }
+
+  Future<void> _initializeCameraAndConnect() async {
+    if (_isInitializing) return;
+
+    setState(() {
+      _isInitializing = true;
+    });
+
+    try {
+      final cubit = context.read<ASLDetectionCubit>();
+
+      // Initialize camera first
+      final cameraSuccess = await cubit.initializeCamera(widget.camera);
+
+      if (cameraSuccess && mounted) {
+        // Then connect to WebSocket server
+        await cubit.connect();
+        print('✅ Camera and WebSocket initialized successfully');
+      } else {
+        print('❌ Camera initialization failed');
+      }
+    } catch (e) {
+      print('❌ Initialization error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Initialization error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+        });
+      }
     }
   }
 
@@ -52,9 +88,14 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Camera Permission Required'),
+        backgroundColor: Colors.grey[900],
+        title: const Text(
+          'Camera Permission Required',
+          style: TextStyle(color: Colors.white),
+        ),
         content: const Text(
-          'This app needs camera access to display the live video feed while detecting hand signs.',
+          'This app needs camera access to capture your hand signs for ASL detection.',
+          style: TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
@@ -74,32 +115,6 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _initializeCamera() async {
-    if (!_permissionGranted) return;
-
-    try {
-      _cameraController = CameraController(
-        widget.camera,
-        ResolutionPreset.medium,
-        enableAudio: false,
-      );
-
-      await _cameraController!.initialize();
-
-      if (mounted) {
-        setState(() {
-          _isCameraInitialized = true;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Camera error: $e')),
-        );
-      }
-    }
   }
 
   void _showServerConnectionDialog() {
@@ -160,10 +175,122 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    _cameraController?.dispose();
-    super.dispose();
+  void _showCameraSettings() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text(
+          'Camera Settings',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.flip_camera_android, color: Colors.white),
+              title: const Text(
+                'Switch Camera',
+                style: TextStyle(color: Colors.white),
+              ),
+              subtitle: const Text(
+                'Toggle between front and back camera',
+                style: TextStyle(color: Colors.white60),
+              ),
+              onTap: () async {
+                Navigator.of(context).pop();
+                final success = await context.read<ASLDetectionCubit>().switchCamera();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success ? 'Camera switched' : 'Failed to switch camera'),
+                    ),
+                  );
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info, color: Colors.white),
+              title: const Text(
+                'Camera Stats',
+                style: TextStyle(color: Colors.white),
+              ),
+              subtitle: const Text(
+                'View camera performance info',
+                style: TextStyle(color: Colors.white60),
+              ),
+              onTap: () {
+                Navigator.of(context).pop();
+                _showCameraStats();
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCameraStats() {
+    final stats = context.read<ASLDetectionCubit>().getCameraStats();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text(
+          'Camera Statistics',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: stats.entries.map((entry) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 120,
+                      child: Text(
+                        '${entry.key}:',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        '${entry.value}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -185,6 +312,11 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
             tooltip: 'Configure Commands',
           ),
           IconButton(
+            onPressed: _showCameraSettings,
+            icon: const Icon(Icons.camera_alt),
+            tooltip: 'Camera Settings',
+          ),
+          IconButton(
             onPressed: _showVibrationSettings,
             icon: BlocBuilder<ASLDetectionCubit, ASLDetectionState>(
               builder: (context, state) {
@@ -197,13 +329,11 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
             ),
             tooltip: 'Vibration Settings',
           ),
-
           IconButton(
             onPressed: _showServerConnectionDialog,
             icon: const Icon(Icons.settings),
             tooltip: 'Server Settings',
           ),
-
           BlocBuilder<ASLDetectionCubit, ASLDetectionState>(
             builder: (context, state) {
               Color statusColor = Colors.red;
@@ -248,14 +378,33 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
             },
             child: const Icon(Icons.refresh),
             backgroundColor: Colors.blue,
+            tooltip: 'Reconnect to Server',
           ),
           const SizedBox(height: 8),
-
+          FloatingActionButton(
+            heroTag: "camera_switch",
+            onPressed: () async {
+              final success = await context.read<ASLDetectionCubit>().switchCamera();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(success ? 'Camera switched' : 'Failed to switch camera'),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+              }
+            },
+            child: const Icon(Icons.flip_camera_android),
+            backgroundColor: Colors.green,
+            tooltip: 'Switch Camera',
+          ),
+          const SizedBox(height: 8),
           FloatingActionButton(
             heroTag: "settings",
             onPressed: _showServerConnectionDialog,
             child: const Icon(Icons.wifi),
-            backgroundColor: Colors.green,
+            backgroundColor: Colors.purple,
+            tooltip: 'Server Connection',
           ),
         ],
       ),
@@ -285,7 +434,7 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
       );
     }
 
-    if (!_isCameraInitialized) {
+    if (_isInitializing) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -293,7 +442,7 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
             CircularProgressIndicator(),
             SizedBox(height: 16),
             Text(
-              'Initializing Camera...',
+              'Initializing Camera & Server...',
               style: TextStyle(color: Colors.white),
             ),
           ],
@@ -301,27 +450,131 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
       );
     }
 
-    return Stack(
-      children: [
-        CameraView(controller: _cameraController!),
-        const DetectionOverlay(),
-        DraggableScrollableSheet(
-          initialChildSize: 0.2,
-          minChildSize: 0.1,
-          maxChildSize: 0.6,
-          builder: (context, scrollController) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(20),
+    return BlocBuilder<ASLDetectionCubit, ASLDetectionState>(
+      builder: (context, state) {
+        if (state is ASLDetectionError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text(
+                  'Connection Error',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Text(
+                    state.error,
+                    style: const TextStyle(color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    context.read<ASLDetectionCubit>().connect();
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry Connection'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Stack(
+          children: [
+            // Camera Preview (Full Screen)
+            Positioned.fill(
+              child: BlocBuilder<ASLDetectionCubit, ASLDetectionState>(
+                builder: (context, state) {
+                  return context.read<ASLDetectionCubit>().getCameraPreview();
+                },
               ),
-              child: CommandList(scrollController: scrollController),
-            );
-          },
-        ),
-      ],
+            ),
+
+            // Detection Overlay
+            const DetectionOverlay(),
+
+            // Command List (Draggable Bottom Sheet)
+            DraggableScrollableSheet(
+              initialChildSize: 0.2,
+              minChildSize: 0.1,
+              maxChildSize: 0.6,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                  ),
+                  child: CommandList(scrollController: scrollController),
+                );
+              },
+            ),
+
+            // Camera Status Indicator (Top Right)
+            Positioned(
+              top: 20,
+              right: 20,
+              child: BlocBuilder<ASLDetectionCubit, ASLDetectionState>(
+                builder: (context, state) {
+                  final cubit = context.read<ASLDetectionCubit>();
+                  final isStreaming = cubit.cameraService.isStreaming;
+
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isStreaming ? Colors.green : Colors.red,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: isStreaming ? Colors.green : Colors.red,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          isStreaming ? 'LIVE' : 'OFFLINE',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
+  }
+
+  @override
+  void dispose() {
+    // Clean up resources when screen is disposed
+    context.read<ASLDetectionCubit>().stopCameraStreaming();
+    super.dispose();
   }
 }

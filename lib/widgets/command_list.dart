@@ -17,7 +17,7 @@ class CommandList extends StatelessWidget {
     '01000 → 00010 → 00001': 'Send Message',
     '00111 → 00011 → 00001': 'Open Camera',
     '01100 → 01110 → 01111': 'Play Music',
-    '00001 → 00010 → 01100': 'Take Screenshot',
+    '00001 → 00011 → 01100': 'Take Screenshot',
     '01000 → 01100 → 00001': 'Open Calculator',
   };
 

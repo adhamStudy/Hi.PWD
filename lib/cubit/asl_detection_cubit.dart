@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:real_time/services/command_executor.dart';
+import 'package:real_time/services/camera_service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import 'package:vibration/vibration.dart';
+import 'package:camera/camera.dart';
 import '../models/asl_detection_state.dart';
 
 class ASLDetectionCubit extends Cubit<ASLDetectionState> {
@@ -14,11 +17,92 @@ class ASLDetectionCubit extends Cubit<ASLDetectionState> {
   String? _lastDetectedAction;
   bool _vibrationEnabled = true;
 
+  // Camera service integration
+  final CameraService _cameraService = CameraService();
+  bool _isCameraInitialized = false;
+
   static const String _wsUrl = 'ws://192.168.173.153:8765';
   String _currentWsUrl = _wsUrl;
 
   ASLDetectionCubit() : super(ASLDetectionInitial()) {
     _initializeVibration();
+  }
+
+  // Camera-related getters
+  bool get isCameraInitialized => _isCameraInitialized;
+  CameraService get cameraService => _cameraService;
+
+  Future<bool> initializeCamera(CameraDescription camera) async {
+    try {
+      emit(ASLDetectionLoading());
+
+      final success = await _cameraService.initialize(camera);
+      if (success) {
+        _isCameraInitialized = true;
+        print('✅ Camera initialized in cubit');
+
+        // Don't emit connected state yet - wait for WebSocket
+        return true;
+      } else {
+        emit(const ASLDetectionError(error: 'Failed to initialize camera'));
+        return false;
+      }
+    } catch (e) {
+      emit(ASLDetectionError(error: 'Camera initialization error: $e'));
+      return false;
+    }
+  }
+
+  Future<void> startCameraStreaming() async {
+    if (!_isCameraInitialized) {
+      print('❌ Camera not initialized');
+      return;
+    }
+
+    if (_channel == null) {
+      print('❌ WebSocket not connected');
+      return;
+    }
+
+    try {
+      _cameraService.connectWebSocket(_channel!);
+      await _cameraService.startStreaming();
+      print('🎥 Camera streaming started');
+    } catch (e) {
+      print('❌ Failed to start camera streaming: $e');
+    }
+  }
+
+  Future<void> stopCameraStreaming() async {
+    try {
+      await _cameraService.stopStreaming();
+      print('🛑 Camera streaming stopped');
+    } catch (e) {
+      print('❌ Failed to stop camera streaming: $e');
+    }
+  }
+
+  Future<bool> switchCamera() async {
+    if (!_isCameraInitialized) return false;
+
+    try {
+      // Stop streaming temporarily
+      await _cameraService.stopStreaming();
+
+      // Switch camera
+      final success = await _cameraService.switchCamera();
+
+      // Restart streaming if it was running
+      if (success && _channel != null) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        await startCameraStreaming();
+      }
+
+      return success;
+    } catch (e) {
+      print('❌ Failed to switch camera: $e');
+      return false;
+    }
   }
 
   void updateServerUrl(String newUrl) {
@@ -77,6 +161,11 @@ class ASLDetectionCubit extends Cubit<ASLDetectionState> {
 
       _channel = WebSocketChannel.connect(Uri.parse(_currentWsUrl));
 
+      // If camera is ready, connect it to WebSocket
+      if (_isCameraInitialized) {
+        _cameraService.connectWebSocket(_channel!);
+      }
+
       emit(const ASLDetectionConnected(connectionStatus: 'Connected'));
 
       _channel!.sink.add(jsonEncode({"command": "ping"}));
@@ -95,6 +184,11 @@ class ASLDetectionCubit extends Cubit<ASLDetectionState> {
         },
       );
 
+      // Auto-start camera streaming if camera is ready
+      if (_isCameraInitialized) {
+        await startCameraStreaming();
+      }
+
     } catch (e) {
       emit(ASLDetectionError(error: 'Failed to connect: $e'));
       _reconnect();
@@ -102,8 +196,6 @@ class ASLDetectionCubit extends Cubit<ASLDetectionState> {
       _isConnecting = false;
     }
   }
-
-
 
   void _handleWebSocketMessage(dynamic data) {
     try {
@@ -150,8 +242,7 @@ class ASLDetectionCubit extends Cubit<ASLDetectionState> {
     }
   }
 
-
-// Add these new methods to the class:
+  // Add these new methods to the class:
   int _lastSequenceLength = 0;
 
   Future<void> _triggerSignAcceptedVibration() async {
@@ -204,14 +295,26 @@ class ASLDetectionCubit extends Cubit<ASLDetectionState> {
 
   void disconnect() {
     _reconnectTimer?.cancel();
+    _cameraService.stopStreaming();
     _channel?.sink.close(status.goingAway);
     _channel = null;
     _lastDetectedAction = null;
   }
 
+  // Get camera preview widget
+  Widget getCameraPreview() {
+    return _cameraService.getCameraPreview();
+  }
+
+  // Get camera stats for debugging
+  Map<String, dynamic> getCameraStats() {
+    return _cameraService.getStats();
+  }
+
   @override
   Future<void> close() {
     disconnect();
+    _cameraService.dispose();
     return super.close();
   }
 }

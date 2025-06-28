@@ -3,57 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/asl_detection_cubit.dart';
 import '../models/asl_detection_state.dart';
 
-class DetectionOverlay extends StatefulWidget {
+class DetectionOverlay extends StatelessWidget {
   const DetectionOverlay({Key? key}) : super(key: key);
-
-  @override
-  State<DetectionOverlay> createState() => _DetectionOverlayState();
-}
-
-class _DetectionOverlayState extends State<DetectionOverlay>
-    with TickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late AnimationController _actionController;
-  late Animation<double> _pulseAnimation;
-  late Animation<double> _actionAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _actionController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-
-    _pulseAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
-
-    _actionAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _actionController,
-      curve: Curves.elasticOut,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    _actionController.dispose();
-    super.dispose();
-  }
 
   String _getFingerName(int index) {
     switch (index) {
@@ -66,75 +17,45 @@ class _DetectionOverlayState extends State<DetectionOverlay>
     }
   }
 
-  Color _getFingerColor(int index, bool isUp) {
-    if (index == 0) return Colors.grey; // Thumb always disabled
-    if (!isUp) return Colors.grey[700]!;
-
-    switch (index) {
-      case 1: return Colors.blue;    // Index
-      case 2: return Colors.green;   // Middle
-      case 3: return Colors.orange;  // Ring
-      case 4: return Colors.purple;  // Pinky
-      default: return Colors.grey;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ASLDetectionCubit, ASLDetectionState>(
-      listener: (context, state) {
-        if (state is ASLDetectionUpdated && state.lastAction != null) {
-          _actionController.forward().then((_) {
-            Future.delayed(const Duration(seconds: 2), () {
-              if (mounted) {
-                _actionController.reverse();
-              }
-            });
-          });
+    return BlocBuilder<ASLDetectionCubit, ASLDetectionState>(
+      builder: (context, state) {
+        if (state is! ASLDetectionUpdated) {
+          return _buildConnectionStatus(state);
         }
-      },
-      child: BlocBuilder<ASLDetectionCubit, ASLDetectionState>(
-        builder: (context, state) {
-          if (state is! ASLDetectionUpdated) {
-            return _buildConnectionStatus(state);
-          }
 
-          return Positioned(
-            top: 80,
-            left: 16,
-            right: 16,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _buildMainDetectionCard(state),
-                const SizedBox(height: 12),
-                if (state.sequenceBuffer.isNotEmpty) _buildSequenceCard(state),
-                const SizedBox(height: 12),
-                if (state.lastAction != null) _buildActionCard(state),
-              ],
-            ),
-          );
-        },
-      ),
+        return Positioned(
+          top: 80,
+          left: 16,
+          right: 16,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildMainDetectionCard(state),
+              const SizedBox(height: 12),
+              if (state.sequenceBuffer.isNotEmpty) _buildSequenceCard(state),
+              const SizedBox(height: 12),
+              if (state.lastAction != null) _buildActionCard(state),
+            ],
+          ),
+        );
+      },
     );
   }
 
   Widget _buildConnectionStatus(ASLDetectionState state) {
     String statusText;
-    Color statusColor;
     IconData statusIcon;
 
     if (state is ASLDetectionLoading) {
       statusText = 'Connecting to server...';
-      statusColor = Colors.orange;
       statusIcon = Icons.wifi_find;
     } else if (state is ASLDetectionError) {
       statusText = 'Connection failed';
-      statusColor = Colors.red;
       statusIcon = Icons.wifi_off;
     } else {
       statusText = 'Initializing...';
-      statusColor = Colors.blue;
       statusIcon = Icons.settings;
     }
 
@@ -145,32 +66,22 @@ class _DetectionOverlayState extends State<DetectionOverlay>
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.8),
+          color: Colors.black.withOpacity(0.85),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: statusColor, width: 2),
+          border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
         ),
         child: Column(
           children: [
-            Icon(statusIcon, color: statusColor, size: 48),
+            Icon(statusIcon, color: Colors.white, size: 32),
             const SizedBox(height: 12),
             Text(
               statusText,
-              style: TextStyle(
-                color: statusColor,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            if (state is ASLDetectionError) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Check server connection',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -178,39 +89,25 @@ class _DetectionOverlayState extends State<DetectionOverlay>
   }
 
   Widget _buildMainDetectionCard(ASLDetectionUpdated state) {
-    final borderColor = state.isStable ? Colors.green : Colors.orange;
-
-    return AnimatedBuilder(
-      animation: _pulseAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: state.isStable ? 1.0 : _pulseAnimation.value,
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.85),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: borderColor, width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: borderColor.withOpacity(0.3),
-                  blurRadius: 12,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                _buildHeader(state),
-                const SizedBox(height: 16),
-                _buildFingerDisplay(state),
-                const SizedBox(height: 16),
-                _buildMovementIndicator(state),
-              ],
-            ),
-          ),
-        );
-      },
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.85),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: state.isStable ? Colors.white.withOpacity(0.4) : Colors.white.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildHeader(state),
+          const SizedBox(height: 16),
+          _buildFingerDisplay(state),
+          const SizedBox(height: 16),
+          _buildMovementIndicator(state),
+        ],
+      ),
     );
   }
 
@@ -221,12 +118,12 @@ class _DetectionOverlayState extends State<DetectionOverlay>
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Hand Detection',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
@@ -243,24 +140,27 @@ class _DetectionOverlayState extends State<DetectionOverlay>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: state.isStable ? Colors.green : Colors.orange,
+            color: Colors.white.withOpacity(0.15),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                state.isStable ? Icons.check_circle : Icons.motion_photos_on,
-                color: Colors.white,
-                size: 16,
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: state.isStable ? Colors.white : Colors.white.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
               Text(
                 state.isStable ? 'STABLE' : 'MOVING',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -274,7 +174,7 @@ class _DetectionOverlayState extends State<DetectionOverlay>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -284,7 +184,7 @@ class _DetectionOverlayState extends State<DetectionOverlay>
             style: TextStyle(
               color: Colors.white,
               fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 12),
@@ -293,41 +193,36 @@ class _DetectionOverlayState extends State<DetectionOverlay>
             children: List.generate(5, (index) {
               final isUp = state.currentSign[index] == '1';
               final isThumb = index == 0;
-              final fingerColor = _getFingerColor(index, isUp);
 
               return Column(
                 children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                  Container(
                     width: 45,
-                    height: 70,
+                    height: 60,
                     decoration: BoxDecoration(
-                      color: fingerColor,
-                      borderRadius: BorderRadius.circular(10),
+                      color: isThumb
+                          ? Colors.white.withOpacity(0.1)
+                          : isUp
+                          ? Colors.white.withOpacity(0.3)
+                          : Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Colors.white,
-                        width: isUp && !isThumb ? 2 : 1,
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
                       ),
-                      boxShadow: isUp && !isThumb ? [
-                        BoxShadow(
-                          color: fingerColor.withOpacity(0.5),
-                          blurRadius: 8,
-                          spreadRadius: 1,
-                        ),
-                      ] : null,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
                           isUp ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                          color: Colors.white,
-                          size: 24,
+                          color: isThumb ? Colors.white.withOpacity(0.4) : Colors.white,
+                          size: 20,
                         ),
                         if (isThumb)
-                          const Icon(
+                          Icon(
                             Icons.block,
-                            color: Colors.white54,
+                            color: Colors.white.withOpacity(0.4),
                             size: 12,
                           ),
                       ],
@@ -337,16 +232,16 @@ class _DetectionOverlayState extends State<DetectionOverlay>
                   Text(
                     _getFingerName(index),
                     style: TextStyle(
-                      color: isThumb ? Colors.white54 : Colors.white,
+                      color: isThumb ? Colors.white.withOpacity(0.4) : Colors.white,
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   if (isThumb)
-                    const Text(
+                    Text(
                       'OFF',
                       style: TextStyle(
-                        color: Colors.white54,
+                        color: Colors.white.withOpacity(0.4),
                         fontSize: 8,
                       ),
                     ),
@@ -361,12 +256,11 @@ class _DetectionOverlayState extends State<DetectionOverlay>
 
   Widget _buildMovementIndicator(ASLDetectionUpdated state) {
     final movementPercentage = (state.movement * 100).clamp(0, 100);
-    final isLowMovement = state.movement < 0.15;
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -379,15 +273,15 @@ class _DetectionOverlayState extends State<DetectionOverlay>
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               Text(
                 '${movementPercentage.toStringAsFixed(1)}%',
-                style: TextStyle(
-                  color: isLowMovement ? Colors.green : Colors.red,
+                style: const TextStyle(
+                  color: Colors.white,
                   fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -395,9 +289,9 @@ class _DetectionOverlayState extends State<DetectionOverlay>
           const SizedBox(height: 8),
           LinearProgressIndicator(
             value: movementPercentage / 100,
-            backgroundColor: Colors.grey[800],
+            backgroundColor: Colors.white.withOpacity(0.1),
             valueColor: AlwaysStoppedAnimation<Color>(
-              isLowMovement ? Colors.green : Colors.red,
+              Colors.white.withOpacity(0.6),
             ),
           ),
         ],
@@ -409,15 +303,9 @@ class _DetectionOverlayState extends State<DetectionOverlay>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.9),
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
-            blurRadius: 8,
-            spreadRadius: 1,
-          ),
-        ],
+        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,14 +319,14 @@ class _DetectionOverlayState extends State<DetectionOverlay>
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -446,7 +334,7 @@ class _DetectionOverlayState extends State<DetectionOverlay>
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -462,7 +350,7 @@ class _DetectionOverlayState extends State<DetectionOverlay>
                 margin: const EdgeInsets.only(right: 8, bottom: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -482,78 +370,64 @@ class _DetectionOverlayState extends State<DetectionOverlay>
   }
 
   Widget _buildActionCard(ASLDetectionUpdated state) {
-    return AnimatedBuilder(
-      animation: _actionAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: 0.8 + (0.2 * _actionAnimation.value),
-          child: Container(
-            padding: const EdgeInsets.all(16),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.green.withOpacity(0.4),
-                  blurRadius: 12,
-                  spreadRadius: 2,
-                ),
-              ],
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(
+            child: const Icon(
+              Icons.check_circle,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.check_circle,
+                const Text(
+                  'Action Executed',
+                  style: TextStyle(
                     color: Colors.white,
-                    size: 24,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Action Executed!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        state.lastAction!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 4),
+                Text(
+                  state.lastAction!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
-                ),
-                BlocBuilder<ASLDetectionCubit, ASLDetectionState>(
-                  builder: (context, state) {
-                    final cubit = context.read<ASLDetectionCubit>();
-                    return Icon(
-                      cubit.isVibrationEnabled ? Icons.vibration : Icons.phone_android,
-                      color: Colors.white,
-                      size: 20,
-                    );
-                  },
                 ),
               ],
             ),
           ),
-        );
-      },
+          BlocBuilder<ASLDetectionCubit, ASLDetectionState>(
+            builder: (context, state) {
+              final cubit = context.read<ASLDetectionCubit>();
+              return Icon(
+                cubit.isVibrationEnabled ? Icons.vibration : Icons.phone_android,
+                color: Colors.white,
+                size: 18,
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
