@@ -1,3 +1,4 @@
+import 'package:real_time/services/system_service_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
@@ -286,7 +287,7 @@ class CommandExecutor {
   // Enhanced camera opening (simplified)
   static Future<void> _openCamera() async {
     // jsut for test open whatsapp
-    bool state = await AppLauncher.openAppByPackageName('com.whatsapp');
+    bool state = await SystemServiceLauncher.openCamera();
 
   }
 

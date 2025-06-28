@@ -3,6 +3,8 @@ package com.example.real_time
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
+import androidx.lifecycle.viewmodel.CreationExtras
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -48,6 +50,44 @@ class MainActivity : FlutterActivity()
         }
     }
 
+    private fun openSystemApp(action: String, extras: Map<String, Any>?): Boolean  {
+        try {
+            val intent = Intent(action)
+            extras?.let {
+                if (it.containsKey("uri")) {
+                    intent.data = it.get("uri").toString().toUri()
+                }
+                if (it.containsKey("type")) {
+                    intent.type = it.get("type").toString()
+                }
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            return true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
+    }
+
+    private fun callNumber(phoneNumber: String): Boolean {
+        try {
+            val intent = Intent(Intent.ACTION_CALL).apply {
+                data = Uri.parse("tel:$phoneNumber")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+
+            if(intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+                return true;
+            }
+            return false;
+        }catch (e: Exception) {
+            e.printStackTrace()
+            return false;
+        }
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         // register method
@@ -61,6 +101,24 @@ class MainActivity : FlutterActivity()
                             result.success(state)
                         } catch (e: Exception) {
                             result.error("UNAVAILABLE", "Cannot open app", e.message)
+                        }
+                    }
+                    "openSystemApp" -> {
+                        val action = call.argument<String>("action")
+                        val extras = call.arguments<Map<String, Any>>()
+                        if(action != null) {
+                            result.success(openSystemApp(action, extras))
+                        } else {
+                            result.error("INVALID_ARGUMENTS", "Action not provided", null)
+                        }
+                    }
+                    "callNumber" -> {
+                        val phoneNumber = call.argument<String>("phoneNumber")
+                        if(phoneNumber != null) {
+                            result.success(callNumber(phoneNumber))
+                        }
+                        else {
+                            result.error("INVALID_ARGUMENTS", "Phone number not provided", null)
                         }
                     }
                     else -> result.notImplemented()
