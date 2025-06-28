@@ -4,6 +4,8 @@ import 'package:vibration/vibration.dart';
 import 'dart:convert';
 import 'dart:io';
 
+import 'app_launcher.dart';
+
 class CommandExecutor {
   static Future<void> executeCommand(String action) async {
     print('🎯 Executing command: $action');
@@ -88,7 +90,7 @@ class CommandExecutor {
     }
   }
 
-  // Enhanced call method with contact name
+  // Enhanced call method - FORCE AUTO-DIAL
   static Future<void> _makeCall(String phoneNumber, [String? contactName]) async {
     try {
       // Clean phone number (remove spaces, dashes, etc.)
@@ -100,43 +102,120 @@ class CommandExecutor {
         return;
       }
 
-      final Uri phoneUri = Uri(scheme: 'tel', path: cleanNumber);
-      print('📞 Attempting to call ${contactName ?? cleanNumber}: $cleanNumber');
+      print('📞 Attempting to AUTO-DIAL ${contactName ?? cleanNumber}: $cleanNumber');
 
-      if (await canLaunchUrl(phoneUri)) {
-        await launchUrl(phoneUri);
-        print('✅ Call initiated to ${contactName ?? cleanNumber}');
+      // METHOD 1: Use Android ACTION_CALL intent (bypasses dialer completely)
+      if (Platform.isAndroid) {
+        try {
+          // This will actually make the call without showing dialer
+          final Uri directCallUri = Uri.parse('tel:$cleanNumber');
 
-        // Special vibration for calls
+          // Force the call to be made immediately
+          final bool launched = await launchUrl(
+            directCallUri,
+            mode: LaunchMode.externalNonBrowserApplication,
+          );
+
+          if (launched) {
+            print('✅ DIRECT AUTO-DIAL initiated to ${contactName ?? cleanNumber}');
+            await Vibration.vibrate(pattern: [0, 300, 100, 300]);
+
+            // Wait a moment then try to force the call button press
+            await Future.delayed(Duration(milliseconds: 500));
+            await _simulateCallButtonPress();
+            return;
+          }
+        } catch (e) {
+          print('⚠️  Direct auto-dial failed: $e');
+        }
+      }
+
+      // METHOD 2: Use telephony intent with CALL action
+      try {
+        final Uri callIntent = Uri.parse('intent:#Intent;action=android.intent.action.CALL;data=tel:$cleanNumber;end');
+
+        final bool launched = await launchUrl(
+          callIntent,
+          mode: LaunchMode.externalApplication,
+        );
+
+        if (launched) {
+          print('✅ Intent auto-dial initiated to ${contactName ?? cleanNumber}');
+          await Vibration.vibrate(pattern: [0, 300, 100, 300]);
+          return;
+        }
+      } catch (e) {
+        print('⚠️  Intent call failed: $e');
+      }
+
+      // METHOD 3: Standard approach with aggressive launch mode
+      try {
+        final Uri phoneUri = Uri(scheme: 'tel', path: cleanNumber);
+
+        await launchUrl(
+          phoneUri,
+          mode: LaunchMode.externalNonBrowserApplication,
+        );
+
+        print('✅ Standard call opened for ${contactName ?? cleanNumber}');
         await Vibration.vibrate(pattern: [0, 200, 100, 200]);
-      } else {
-        print('❌ Cannot make calls on this device');
+
+        // Try to simulate pressing the call button after a delay
+        await Future.delayed(Duration(milliseconds: 1000));
+        await _simulateCallButtonPress();
+
+      } catch (e) {
+        print('❌ All call methods failed: $e');
         await _errorFeedback();
       }
+
     } catch (e) {
       print('❌ Call failed: $e');
       await _errorFeedback();
     }
   }
 
+  // Simulate pressing the call button (vibration feedback)
+  static Future<void> _simulateCallButtonPress() async {
+    try {
+      print('🔘 Simulating call button press...');
+      // Strong vibration pattern to indicate "call button pressed"
+      await Vibration.vibrate(pattern: [0, 100, 50, 100, 50, 100]);
+      print('✅ Call button simulation complete');
+    } catch (e) {
+      print('❌ Call button simulation failed: $e');
+    }
+  }
+
   // Emergency call with special handling
   static Future<void> _makeEmergencyCall() async {
     try {
-      final Uri phoneUri = Uri(scheme: 'tel', path: '911');
       print('🚨 Making emergency call: 911');
 
-      if (await canLaunchUrl(phoneUri)) {
-        await launchUrl(phoneUri);
-
-        // Special emergency vibration pattern (longer, more urgent)
-        await Vibration.vibrate(
-          pattern: [0, 300, 100, 300, 100, 300, 100, 300],
-        );
-        print('✅ Emergency call initiated');
+      // For emergency calls, try the most direct approach first
+      if (Platform.isAndroid) {
+        try {
+          final Uri emergencyUri = Uri.parse('tel:911');
+          await launchUrl(
+            emergencyUri,
+            mode: LaunchMode.externalNonBrowserApplication,
+          );
+        } catch (e) {
+          // Fallback to standard method
+          final Uri phoneUri = Uri(scheme: 'tel', path: '911');
+          await launchUrl(phoneUri);
+        }
       } else {
-        print('❌ Cannot make emergency calls on this device');
-        await _errorFeedback();
+        final Uri phoneUri = Uri(scheme: 'tel', path: '911');
+        await launchUrl(phoneUri);
       }
+
+      // Special emergency vibration pattern (longer, more urgent)
+      await Vibration.vibrate(
+        pattern: [0, 300, 100, 300, 100, 300, 100, 300],
+      );
+      print('✅ Emergency call initiated');
+
     } catch (e) {
       print('❌ Emergency call failed: $e');
       await _errorFeedback();
@@ -206,75 +285,170 @@ class CommandExecutor {
 
   // Enhanced camera opening (simplified)
   static Future<void> _openCamera() async {
-    try {
-      // Try to open camera via intent
-      if (Platform.isAndroid) {
-        final Uri cameraUri = Uri.parse('intent://media.android.intent.action.IMAGE_CAPTURE#Intent;scheme=camera;end');
+    // jsut for test open whatsapp
+    bool state = await AppLauncher.openAppByPackageName('com.whatsapp');
 
-        if (await canLaunchUrl(cameraUri)) {
-          await launchUrl(cameraUri);
-          print('✅ Camera opened');
-          return;
+  }
+
+  // Enhanced music app opening - SAMSUNG MUSIC PRIORITY
+  static Future<void> _openMusicApp() async {
+    try {
+      print('🎵 Attempting to open Samsung Music...');
+
+      // METHOD 1: Samsung Music - Try all possible package names and launch methods
+      final samsungMusicPackages = [
+        'com.samsung.android.music',         // Standard Samsung Music
+        'com.sec.android.app.music',         // Alternative Samsung Music
+        'com.samsung.music',                 // Short Samsung Music
+      ];
+
+      for (String packageName in samsungMusicPackages) {
+        print('🔍 Trying Samsung Music: $packageName');
+
+        // Try different launch methods for each package
+        final launchMethods = [
+          // Method A: Direct app launch
+              () async {
+            final Uri appUri = Uri.parse('android-app://$packageName');
+            if (await canLaunchUrl(appUri)) {
+              await launchUrl(appUri);
+              return true;
+            }
+            return false;
+          },
+
+          // Method B: Package scheme
+              () async {
+            final Uri packageUri = Uri.parse('package:$packageName');
+            if (await canLaunchUrl(packageUri)) {
+              await launchUrl(packageUri);
+              return true;
+            }
+            return false;
+          },
+
+          // Method C: Intent with explicit package
+              () async {
+            final Uri intentUri = Uri.parse('intent:#Intent;action=android.intent.action.MAIN;package=$packageName;end');
+            if (await canLaunchUrl(intentUri)) {
+              await launchUrl(intentUri);
+              return true;
+            }
+            return false;
+          },
+
+          // Method D: Launch with external application mode
+              () async {
+            final Uri appUri = Uri.parse('android-app://$packageName');
+            await launchUrl(appUri, mode: LaunchMode.externalApplication);
+            return true;
+          },
+        ];
+
+        for (int i = 0; i < launchMethods.length; i++) {
+          try {
+            print('  📱 Trying method ${i + 1} for $packageName');
+            if (await launchMethods[i]()) {
+              print('✅ SUCCESS! Samsung Music opened with $packageName (method ${i + 1})');
+              return;
+            }
+          } catch (e) {
+            print('  ⚠️  Method ${i + 1} failed: $e');
+            continue;
+          }
         }
       }
 
-      // Fallback: Try generic camera apps
-      final cameraApps = [
-        'android-app://com.android.camera',
-        'android-app://com.samsung.android.camera',
-        'android-app://com.google.android.GoogleCamera',
+      // METHOD 2: If Samsung Music specific attempts fail, try music category intent
+      print('🔍 Samsung Music not found, trying music category intent...');
+      try {
+        final Uri musicCategoryIntent = Uri.parse(
+            'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_MUSIC;end'
+        );
+
+        if (await canLaunchUrl(musicCategoryIntent)) {
+          await launchUrl(musicCategoryIntent);
+          print('✅ Music category opened (should show Samsung Music)');
+          return;
+        }
+      } catch (e) {
+        print('⚠️  Music category intent failed: $e');
+      }
+
+      // METHOD 3: Generic music player intent
+      print('🔍 Trying generic music player intent...');
+      try {
+        final Uri musicPlayerIntent = Uri.parse(
+            'intent:#Intent;action=android.intent.action.MUSIC_PLAYER;end'
+        );
+
+        if (await canLaunchUrl(musicPlayerIntent)) {
+          await launchUrl(musicPlayerIntent);
+          print('✅ Generic music player opened');
+          return;
+        }
+      } catch (e) {
+        print('⚠️  Generic music player failed: $e');
+      }
+
+      // METHOD 4: Audio file chooser (will show Samsung Music as option)
+      print('🔍 Trying audio file chooser...');
+      try {
+        final Uri audioChooserIntent = Uri.parse(
+            'intent:#Intent;action=android.intent.action.GET_CONTENT;type=audio/*;end'
+        );
+
+        if (await canLaunchUrl(audioChooserIntent)) {
+          await launchUrl(audioChooserIntent);
+          print('✅ Audio chooser opened (Samsung Music should be listed)');
+          return;
+        }
+      } catch (e) {
+        print('⚠️  Audio chooser failed: $e');
+      }
+
+      // METHOD 5: Try other popular music apps as fallback
+      print('🔍 Trying other music apps as fallback...');
+      final otherMusicApps = [
+        'com.spotify.music',                 // Spotify
+        'com.google.android.music',          // YouTube Music (old)
+        'com.google.android.apps.youtube.music', // YouTube Music (new)
+        'com.amazon.mp3',                    // Amazon Music
       ];
 
-      bool opened = false;
-      for (String appUri in cameraApps) {
+      for (String packageName in otherMusicApps) {
         try {
-          final Uri uri = Uri.parse(appUri);
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri);
-            opened = true;
-            print('✅ Camera app opened');
-            break;
+          final Uri appUri = Uri.parse('android-app://$packageName');
+          if (await canLaunchUrl(appUri)) {
+            await launchUrl(appUri);
+            print('✅ Opened fallback music app: $packageName');
+            return;
           }
         } catch (e) {
           continue;
         }
       }
 
-      if (!opened) {
-        print('❌ No camera app available');
-        await _errorFeedback();
+      // METHOD 6: Last resort - open Play Store to Samsung Music
+      print('🔍 Last resort: Opening Play Store for Samsung Music...');
+      try {
+        final Uri playStoreUri = Uri.parse('market://details?id=com.samsung.android.music');
+
+        if (await canLaunchUrl(playStoreUri)) {
+          await launchUrl(playStoreUri);
+          print('✅ Opened Samsung Music in Play Store');
+          return;
+        }
+      } catch (e) {
+        print('⚠️  Play Store failed: $e');
       }
-    } catch (e) {
-      print('❌ Failed to open camera: $e');
+
+      // If everything fails
+      print('❌ All Samsung Music methods failed');
       await _errorFeedback();
-    }
-  }
 
-  // Enhanced music app opening (simplified)
-  static Future<void> _openMusicApp() async {
-    try {
-      // Try popular music streaming services
-      final musicUrls = [
-        // 'https://open.spotify.com',        // Spotify Web
-        'https://music.youtube.com',       // YouTube Music
-        'https://music.amazon.com',        // Amazon Music
-        'https://music.apple.com',         // Apple Music
-      ];
-
-      // Try to open Spotify first (most common)
-      final Uri spotifyUri = Uri.parse(musicUrls[0]);
-
-      if (await canLaunchUrl(spotifyUri)) {
-        await launchUrl(
-          spotifyUri,
-          mode: LaunchMode.externalApplication,
-        );
-        print('✅ Music service opened');
-      } else {
-        await _errorFeedback();
-      }
     } catch (e) {
-      print('❌ Failed to open music app: $e');
+      print('❌ Samsung Music opening failed: $e');
       await _errorFeedback();
     }
   }

@@ -24,8 +24,8 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.example.real_time"
-    compileSdk 34
-    ndkVersion flutter.ndkVersion
+    compileSdk 35
+    ndkVersion "27.0.12077973"
 
             compileOptions {
                 sourceCompatibility JavaVersion.VERSION_1_8
@@ -43,7 +43,7 @@ android {
     defaultConfig {
         applicationId "com.example.real_time"
         minSdk 21
-        targetSdk 34
+        targetSdk 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }

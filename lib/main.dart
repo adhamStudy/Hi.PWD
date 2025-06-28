@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:camera/camera.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'asl_detection_screen.dart';
 import 'cubit/asl_detection_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  // Test direct calling
+  // final Uri callUri = Uri.parse('tel:+1234567890');
+  // await launchUrl(callUri, mode: LaunchMode.externalNonBrowserApplication);
   try {
     // Get available cameras with error handling
     final cameras = await availableCameras();
