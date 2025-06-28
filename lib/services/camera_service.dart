@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:image/image.dart' as img;
 
+
 class CameraService {
   CameraController? _controller;
   Timer? _frameTimer;
@@ -13,14 +14,14 @@ class CameraService {
   bool _isStreaming = false;
   bool _isInitialized = false;
 
-  // Frame rate control
-  static const int targetFPS = 10; // Send 10 frames per second to reduce load
-  static const Duration frameDuration = Duration(milliseconds: 100);
+  // High-speed frame rate control for 5G-like performance
+  static const int targetFPS = 30; // Maximum FPS for ultra-responsive detection
+  static const Duration frameDuration = Duration(milliseconds: 33); // 30 FPS = ~33ms intervals
 
-  // Image processing settings
-  static const int imageWidth = 640;  // Resize for faster processing
-  static const int imageHeight = 480;
-  static const int imageQuality = 85; // JPEG quality (0-100)
+  // Optimized image settings for speed vs quality balance
+  static const int imageWidth = 480;  // Smaller for faster transmission
+  static const int imageHeight = 360;
+  static const int imageQuality = 70; // Lower quality for faster encoding/transmission
 
   bool get isInitialized => _isInitialized;
   bool get isStreaming => _isStreaming;
@@ -65,14 +66,14 @@ class CameraService {
 
     try {
       _isStreaming = true;
-      print('🎥 Starting camera frame streaming...');
+      print('🎥 Starting HIGH-SPEED camera frame streaming...');
 
-      // Start periodic frame capture
+      // Start high-frequency frame capture
       _frameTimer = Timer.periodic(frameDuration, (timer) {
         _captureAndSendFrame();
       });
 
-      print('✅ Camera streaming started at ${targetFPS} FPS');
+      print('✅ HIGH-SPEED streaming started at ${targetFPS} FPS');
     } catch (e) {
       print('❌ Failed to start streaming: $e');
       _isStreaming = false;
@@ -119,30 +120,30 @@ class CameraService {
 
   Future<String> _processImage(Uint8List imageBytes) async {
     try {
-      // Decode image
+      // ULTRA-FAST image processing
       img.Image? originalImage = img.decodeImage(imageBytes);
       if (originalImage == null) {
         throw Exception('Failed to decode image');
       }
 
-      // Resize image for faster processing
+      // Fast resize with nearest neighbor (fastest interpolation)
       img.Image resizedImage = img.copyResize(
         originalImage,
         width: imageWidth,
         height: imageHeight,
-        interpolation: img.Interpolation.linear,
+        interpolation: img.Interpolation.nearest, // Fastest method
       );
 
-      // Convert to JPEG with compression
+      // Fast JPEG encoding with lower quality for speed
       List<int> jpegBytes = img.encodeJpg(resizedImage, quality: imageQuality);
 
-      // Convert to base64
+      // Direct base64 conversion
       String base64String = base64Encode(jpegBytes);
 
       return base64String;
     } catch (e) {
       print('❌ Image processing error: $e');
-      // Fallback: return original image as base64
+      // Emergency fallback: return original as base64 (no processing)
       return base64Encode(imageBytes);
     }
   }
