@@ -19,7 +19,7 @@ class CameraService {
   static const Duration frameDuration = Duration(milliseconds: 33); // 30 FPS = ~33ms intervals
 
   // Optimized image settings for speed vs quality balance
-  static const int imageWidth = 480;  // Smaller for faster transmission
+  static const int imageWidth = 360;  // Smaller for faster transmission
   static const int imageHeight = 360;
   static const int imageQuality = 70; // Lower quality for faster encoding/transmission
 

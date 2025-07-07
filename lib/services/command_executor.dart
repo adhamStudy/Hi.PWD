@@ -292,32 +292,34 @@ class CommandExecutor {
   }
 
   // NATIVE music app opening - THIS SHOULD WORK NOW!
+// Replace your existing _openMusicApp method with this
   static Future<void> _openMusicApp() async {
     try {
-      print('🎵 Opening Samsung Music via NATIVE method...');
+      print('🎵 Opening Samsung Music...');
 
-      // Method 1: Try Samsung Music directly
+      // Try the CORRECT package first!
       try {
-        final bool success = await AppLauncher.openAppByPackageName('com.samsung.android.music');
+        final bool success = await AppLauncher.openAppByPackageName('com.sec.android.app.music');
         if (success) {
-          print('✅ Samsung Music opened successfully!');
+          print('✅ Samsung Music opened successfully: com.sec.android.app.music');
           return;
         }
       } catch (e) {
-        print('⚠️  Samsung Music package failed: $e');
+        print('⚠️ Samsung Music failed: $e');
       }
 
-      // Method 2: Try alternative Samsung Music packages
+      // Fallback to other Samsung packages
       final samsungPackages = [
-        'com.sec.android.app.music',
+        'com.samsung.android.music',
         'com.samsung.music',
+        'com.samsung.android.app.music',
       ];
 
       for (String packageName in samsungPackages) {
         try {
           final bool success = await AppLauncher.openAppByPackageName(packageName);
           if (success) {
-            print('✅ Samsung Music opened via $packageName');
+            print('✅ Samsung Music opened via fallback: $packageName');
             return;
           }
         } catch (e) {
@@ -325,7 +327,7 @@ class CommandExecutor {
         }
       }
 
-      // Method 3: Try other music apps
+      // Try other music apps if Samsung Music fails
       final musicPackages = [
         'com.spotify.music',
         'com.google.android.music',
@@ -337,7 +339,7 @@ class CommandExecutor {
         try {
           final bool success = await AppLauncher.openAppByPackageName(packageName);
           if (success) {
-            print('✅ Music app opened: $packageName');
+            print('✅ Alternative music app opened: $packageName');
             return;
           }
         } catch (e) {
@@ -345,7 +347,7 @@ class CommandExecutor {
         }
       }
 
-      // Method 4: Native system music intent
+      // Last resort: Native system music intent
       try {
         const platform = MethodChannel('open_apps_channel');
         final bool success = await platform.invokeMethod('openSystemApp', {
@@ -357,7 +359,7 @@ class CommandExecutor {
           return;
         }
       } catch (e) {
-        print('⚠️  Native music intent failed: $e');
+        print('⚠️ Native music intent failed: $e');
       }
 
       print('❌ All music methods failed');
