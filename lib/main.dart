@@ -37,7 +37,7 @@ void main() async {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final CameraDescription camera;
   final List<CameraDescription> availableCameras;
 
@@ -48,6 +48,105 @@ class MyApp extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  late CameraDescription currentCamera;
+  late List<CameraDescription> availableCameras;
+  bool _isAppActive = true;
+
+  @override
+  void initState() {
+    super.initState();
+    currentCamera = widget.camera;
+    availableCameras = widget.availableCameras;
+
+    // Add lifecycle observer
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    // Remove lifecycle observer
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    print('🔄 App lifecycle changed: $state');
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+      // App is back in foreground
+        if (!_isAppActive) {
+          print('📱 App resumed - reinitializing camera...');
+          _reinitializeApp();
+        }
+        _isAppActive = true;
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      // App is going to background
+        _isAppActive = false;
+        break;
+      case AppLifecycleState.detached:
+      // App is being destroyed
+        break;
+      case AppLifecycleState.hidden:
+      // App is hidden
+        _isAppActive = false;
+        break;
+    }
+  }
+
+  Future<void> _reinitializeApp() async {
+    try {
+      print('🔄 Reinitializing camera resources...');
+
+      // Check if cameras are still available
+      final bool cameraAvailable = await CameraService.isCameraAvailable();
+
+      if (!cameraAvailable) {
+        print('❌ No cameras available after resume');
+        return;
+      }
+
+      // Get available cameras again
+      final cameras = await CameraService.getAvailableCameras();
+
+      if (cameras.isEmpty) {
+        print('❌ No cameras found after resume');
+        return;
+      }
+
+      // Update camera list
+      availableCameras = cameras;
+
+      // Keep same camera preference (front camera)
+      final frontCamera = cameras.firstWhere(
+            (camera) => camera.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
+
+      currentCamera = frontCamera;
+
+      print('✅ Camera reinitialized successfully');
+
+      // Trigger rebuild to refresh the UI
+      if (mounted) {
+        setState(() {});
+      }
+
+    } catch (e) {
+      print('❌ Failed to reinitialize camera: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -55,18 +154,48 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         brightness: Brightness.dark,
-        // Enhanced theme for camera app
         scaffoldBackgroundColor: Colors.black,
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.black87,
           elevation: 0,
         ),
       ),
-      home: BlocProvider(
+      home: _isAppActive
+          ? BlocProvider(
         create: (context) => ASLDetectionCubit(),
         child: ASLDetectionScreen(
-          camera: camera,
+          camera: currentCamera,
           availableCameras: availableCameras,
+        ),
+      )
+          : const LoadingScreen(),
+    );
+  }
+}
+
+// Loading screen while app is reinitializing
+class LoadingScreen extends StatelessWidget {
+  const LoadingScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(
+              color: Colors.blue,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Initializing camera...',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -113,9 +242,9 @@ class ErrorApp extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton.icon(
-                  onPressed: () {
-                    // Restart app
-                    main();
+                  onPressed: () async {
+                    // Restart app properly
+                    await _restartApp();
                   },
                   icon: const Icon(Icons.refresh),
                   label: const Text('Try Again'),
@@ -141,5 +270,10 @@ class ErrorApp extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static Future<void> _restartApp() async {
+    // Properly restart the app
+    main();
   }
 }
