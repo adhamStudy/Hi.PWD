@@ -88,14 +88,14 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
+        backgroundColor: Colors.white,
         title: const Text(
           'Camera Permission Required',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.black87),
         ),
         content: const Text(
           'This app needs camera access to capture your hand signs for ASL detection.',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: Colors.black54),
         ),
         actions: [
           TextButton(
@@ -135,10 +135,10 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
+        backgroundColor: Colors.white,
         title: const Text(
           'Vibration Settings',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.black87),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -146,11 +146,11 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
             SwitchListTile(
               title: const Text(
                 'Enable Vibration',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.black87),
               ),
               subtitle: const Text(
                 'Vibrate when actions are detected',
-                style: TextStyle(color: Colors.white60),
+                style: TextStyle(color: Colors.black54),
               ),
               value: cubit.isVibrationEnabled,
               onChanged: (value) {
@@ -179,23 +179,23 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
+        backgroundColor: Colors.white,
         title: const Text(
           'Camera Settings',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.black87),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.flip_camera_android, color: Colors.white),
+              leading: const Icon(Icons.flip_camera_android, color: Colors.black87),
               title: const Text(
                 'Switch Camera',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.black87),
               ),
               subtitle: const Text(
                 'Toggle between front and back camera',
-                style: TextStyle(color: Colors.white60),
+                style: TextStyle(color: Colors.black54),
               ),
               onTap: () async {
                 Navigator.of(context).pop();
@@ -210,14 +210,14 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.info, color: Colors.white),
+              leading: const Icon(Icons.info, color: Colors.black87),
               title: const Text(
                 'Camera Stats',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.black87),
               ),
               subtitle: const Text(
                 'View camera performance info',
-                style: TextStyle(color: Colors.white60),
+                style: TextStyle(color: Colors.black54),
               ),
               onTap: () {
                 Navigator.of(context).pop();
@@ -242,10 +242,10 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
+        backgroundColor: Colors.white,
         title: const Text(
           'Camera Statistics',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.black87),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -262,7 +262,7 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
                       child: Text(
                         '${entry.key}:',
                         style: const TextStyle(
-                          color: Colors.white70,
+                          color: Colors.black54,
                           fontSize: 12,
                         ),
                       ),
@@ -271,7 +271,7 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
                       child: Text(
                         '${entry.value}',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: Colors.black87,
                           fontSize: 12,
                           fontFamily: 'monospace',
                         ),
@@ -296,10 +296,13 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('ASL Detection'),
-        backgroundColor: Colors.black87,
+        title: const Text('Hi.PWD',style: TextStyle(fontWeight: FontWeight.bold),),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 1,
+        shadowColor: Colors.black12,
         actions: [
           IconButton(
             onPressed: () {
@@ -311,29 +314,29 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
             icon: const Icon(Icons.tune),
             tooltip: 'Configure Commands',
           ),
-          IconButton(
-            onPressed: _showCameraSettings,
-            icon: const Icon(Icons.camera_alt),
-            tooltip: 'Camera Settings',
-          ),
-          IconButton(
-            onPressed: _showVibrationSettings,
-            icon: BlocBuilder<ASLDetectionCubit, ASLDetectionState>(
-              builder: (context, state) {
-                final cubit = context.read<ASLDetectionCubit>();
-                return Icon(
-                  cubit.isVibrationEnabled ? Icons.vibration : Icons.phone_android,
-                  color: cubit.isVibrationEnabled ? Colors.blue : Colors.grey,
-                );
-              },
-            ),
-            tooltip: 'Vibration Settings',
-          ),
-          IconButton(
-            onPressed: _showServerConnectionDialog,
-            icon: const Icon(Icons.settings),
-            tooltip: 'Server Settings',
-          ),
+          // IconButton(
+          //   onPressed: _showCameraSettings,
+          //   icon: const Icon(Icons.camera_alt),
+          //   tooltip: 'Camera Settings',
+          // ),
+          // IconButton(
+          //   onPressed: _showVibrationSettings,
+          //   icon: BlocBuilder<ASLDetectionCubit, ASLDetectionState>(
+          //     builder: (context, state) {
+          //       final cubit = context.read<ASLDetectionCubit>();
+          //       return Icon(
+          //         cubit.isVibrationEnabled ? Icons.vibration : Icons.phone_android,
+          //         color: cubit.isVibrationEnabled ? Colors.blue : Colors.grey,
+          //       );
+          //     },
+          //   ),
+          //   tooltip: 'Vibration Settings',
+          // ),
+          // IconButton(
+          //   onPressed: _showServerConnectionDialog,
+          //   icon: const Icon(Icons.settings),
+          //   tooltip: 'Server Settings',
+          // ),
           BlocBuilder<ASLDetectionCubit, ASLDetectionState>(
             builder: (context, state) {
               Color statusColor = Colors.red;
@@ -399,13 +402,13 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
             tooltip: 'Switch Camera',
           ),
           const SizedBox(height: 8),
-          FloatingActionButton(
-            heroTag: "settings",
-            onPressed: _showServerConnectionDialog,
-            child: const Icon(Icons.wifi),
-            backgroundColor: Colors.purple,
-            tooltip: 'Server Connection',
-          ),
+          // FloatingActionButton(
+          //   heroTag: "settings",
+          //   onPressed: _showServerConnectionDialog,
+          //   child: const Icon(Icons.wifi),
+          //   backgroundColor: Colors.purple,
+          //   tooltip: 'Server Connection',
+          // ),
         ],
       ),
     );
@@ -413,39 +416,69 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
 
   Widget _buildBody() {
     if (!_permissionGranted) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.camera_alt, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              'Camera Permission Required',
-              style: TextStyle(fontSize: 18, color: Colors.white),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Please grant camera permission to continue',
-              style: TextStyle(color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ],
+      return Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          margin: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.camera_alt, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'Camera Permission Required',
+                style: TextStyle(fontSize: 18, color: Colors.black87, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Please grant camera permission to continue',
+                style: TextStyle(color: Colors.black54),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       );
     }
 
     if (_isInitializing) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text(
-              'Initializing Camera & Server...',
-              style: TextStyle(color: Colors.white),
-            ),
-          ],
+      return Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          margin: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text(
+                'Initializing Camera & Server...',
+                style: TextStyle(color: Colors.black87),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -454,36 +487,49 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
       builder: (context, state) {
         if (state is ASLDetectionError) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error, size: 64, color: Colors.red),
-                const SizedBox(height: 16),
-                const Text(
-                  'Connection Error',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Text(
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              margin: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Connection Error',
+                    style: TextStyle(fontSize: 18, color: Colors.black87, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
                     state.error,
-                    style: const TextStyle(color: Colors.grey),
+                    style: const TextStyle(color: Colors.black54),
                     textAlign: TextAlign.center,
                   ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    context.read<ASLDetectionCubit>().connect();
-                  },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry Connection'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.read<ASLDetectionCubit>().connect();
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry Connection'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         }
@@ -509,11 +555,18 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
               maxChildSize: 0.6,
               builder: (context, scrollController) {
                 return Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.black87,
-                    borderRadius: BorderRadius.vertical(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.95),
+                    borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(20),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
                   ),
                   child: CommandList(scrollController: scrollController),
                 );
@@ -532,12 +585,19 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.white.withOpacity(0.9),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isStreaming ? Colors.green : Colors.red,
                         width: 1,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -554,7 +614,7 @@ class _ASLDetectionScreenState extends State<ASLDetectionScreen> {
                         Text(
                           isStreaming ? 'LIVE' : 'OFFLINE',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: Colors.black87,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),

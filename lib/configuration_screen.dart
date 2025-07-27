@@ -115,10 +115,12 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.grey[100],
         appBar: AppBar(
           title: const Text('Configure Commands'),
-          backgroundColor: Colors.black87,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          elevation: 1,
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -127,10 +129,12 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text('Configure Commands'),
-        backgroundColor: Colors.black87,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 1,
         actions: [
           IconButton(
             onPressed: _saveContacts,
@@ -147,7 +151,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
             const Text(
               'Emergency & Family Contacts',
               style: TextStyle(
-                color: Colors.white,
+                color: Colors.black87,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -155,7 +159,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
             const SizedBox(height: 8),
             const Text(
               'Configure who to call when using hand sign commands',
-              style: TextStyle(color: Colors.white60, fontSize: 16),
+              style: TextStyle(color: Colors.black54, fontSize: 16),
             ),
             const SizedBox(height: 24),
 
@@ -166,7 +170,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
             const Text(
               'Default Commands',
               style: TextStyle(
-                color: Colors.blue,
+                color: Colors.green,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -174,7 +178,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
             const SizedBox(height: 8),
             const Text(
               'These commands are built-in and always available',
-              style: TextStyle(color: Colors.white60, fontSize: 14),
+              style: TextStyle(color: Colors.black54, fontSize: 14),
             ),
             const SizedBox(height: 16),
 
@@ -182,18 +186,19 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
 
             const SizedBox(height: 32),
 
-            _buildCustomCommandsSection(),
+            // _buildCustomCommandsSection(),
 
             const SizedBox(height: 20),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddCustomCommandDialog,
-        backgroundColor: Colors.purple,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Custom Command'),
-      ),
+      // floatingActionButton: FloatingActionButton.extended(
+      //   onPressed: _showAddCustomCommandDialog,
+      //   backgroundColor: Colors.purple,
+      //   foregroundColor: Colors.white,
+      //   icon: const Icon(Icons.add),
+      //   label: const Text('Add Custom Command'),
+      // ),
     );
   }
 
@@ -201,9 +206,16 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.green.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,8 +241,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey[850],
+              color: Colors.grey[50],
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.withOpacity(0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,36 +265,52 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: _dadNameController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.black87),
                   decoration: InputDecoration(
                     labelText: 'Name (e.g., Dad, Papa, Father)',
-                    labelStyle: const TextStyle(color: Colors.white70),
+                    labelStyle: const TextStyle(color: Colors.black54),
                     filled: true,
-                    fillColor: Colors.grey[800],
+                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
-                    prefixIcon: const Icon(Icons.person, color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.blue),
+                    ),
+                    prefixIcon: const Icon(Icons.person, color: Colors.black54),
                   ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _dadNumberController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.black87),
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
                     labelText: 'Phone Number',
-                    labelStyle: const TextStyle(color: Colors.white70),
+                    labelStyle: const TextStyle(color: Colors.black54),
                     filled: true,
-                    fillColor: Colors.grey[800],
+                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
-                    prefixIcon: const Icon(Icons.phone, color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.blue),
+                    ),
+                    prefixIcon: const Icon(Icons.phone, color: Colors.black54),
                     hintText: '+1 234 567 8900',
-                    hintStyle: const TextStyle(color: Colors.white38),
+                    hintStyle: const TextStyle(color: Colors.black26),
                   ),
                 ),
               ],
@@ -292,8 +321,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey[850],
+              color: Colors.grey[50],
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.withOpacity(0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,36 +345,52 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: _momNameController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.black87),
                   decoration: InputDecoration(
                     labelText: 'Name (e.g., Mom, Mama, Mother)',
-                    labelStyle: const TextStyle(color: Colors.white70),
+                    labelStyle: const TextStyle(color: Colors.black54),
                     filled: true,
-                    fillColor: Colors.grey[800],
+                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
-                    prefixIcon: const Icon(Icons.person, color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.pink),
+                    ),
+                    prefixIcon: const Icon(Icons.person, color: Colors.black54),
                   ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _momNumberController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.black87),
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
                     labelText: 'Phone Number',
-                    labelStyle: const TextStyle(color: Colors.white70),
+                    labelStyle: const TextStyle(color: Colors.black54),
                     filled: true,
-                    fillColor: Colors.grey[800],
+                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
-                    prefixIcon: const Icon(Icons.phone, color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.pink),
+                    ),
+                    prefixIcon: const Icon(Icons.phone, color: Colors.black54),
                     hintText: '+1 234 567 8900',
-                    hintStyle: const TextStyle(color: Colors.white38),
+                    hintStyle: const TextStyle(color: Colors.black26),
                   ),
                 ),
               ],
@@ -359,6 +405,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
               onPressed: _saveContacts,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -395,9 +442,16 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.grey[850],
+          color: Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: (command['color'] as Color).withOpacity(0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -410,7 +464,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                   Text(
                     command['action'] as String,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: Colors.black87,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -419,7 +473,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                   Text(
                     command['sign'] as String,
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: Colors.black54,
                       fontSize: 12,
                     ),
                   ),
@@ -429,13 +483,14 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: (command['color'] as Color).withOpacity(0.2),
+                color: (command['color'] as Color).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: (command['color'] as Color).withOpacity(0.3)),
               ),
-              child: const Text(
+              child: Text(
                 'Built-in',
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: (command['color'] as Color),
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),
@@ -472,31 +527,38 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'Create your own custom gesture commands',
-          style: TextStyle(color: Colors.white60, fontSize: 14),
-        ),
-        const SizedBox(height: 16),
+        // const SizedBox(height: 8),
+        // const Text(
+        //   'Create your own custom gesture commands',
+        //   style: TextStyle(color: Colors.black54, fontSize: 14),
+        // ),
+        // const SizedBox(height: 16),
 
-        if (_commands.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.grey[900],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.purple.withOpacity(0.3)),
-            ),
-            child: const Center(
-              child: Text(
-                'No custom commands yet.\nTap the + button to create one!',
-                style: TextStyle(color: Colors.white54, fontSize: 16),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          )
-        else
-          ..._commands.values.map((command) => _buildCommandCard(command)).toList(),
+        // if (_commands.isEmpty)
+        //   Container(
+        //     padding: const EdgeInsets.all(20),
+        //     decoration: BoxDecoration(
+        //       color: Colors.white,
+        //       borderRadius: BorderRadius.circular(8),
+        //       border: Border.all(color: Colors.purple.withOpacity(0.3)),
+        //       boxShadow: [
+        //         BoxShadow(
+        //           color: Colors.black.withOpacity(0.05),
+        //           blurRadius: 4,
+        //           offset: const Offset(0, 2),
+        //         ),
+        //       ],
+        //     ),
+        //     child: const Center(
+        //       child: Text(
+        //         'No custom commands yet.\nTap the + button to create one!',
+        //         style: TextStyle(color: Colors.black54, fontSize: 16),
+        //         textAlign: TextAlign.center,
+        //       ),
+        //     ),
+        //   )
+        // else
+        //   ..._commands.values.map((command) => _buildCommandCard(command)).toList(),
       ],
     );
   }
@@ -506,9 +568,16 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[850],
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.purple.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -521,7 +590,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 Text(
                   command.name,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black87,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -529,7 +598,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'Sequence: ${command.sequence}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  style: const TextStyle(color: Colors.black54, fontSize: 12),
                 ),
                 Text(
                   'Type: ${command.type}',
@@ -560,11 +629,11 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Delete Command', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.white,
+        title: const Text('Delete Command', style: TextStyle(color: Colors.black87)),
         content: const Text(
           'Are you sure you want to delete this custom command?',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: Colors.black54),
         ),
         actions: [
           TextButton(
@@ -579,7 +648,10 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
               await _saveCommands();
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Delete'),
           ),
         ],
@@ -595,10 +667,10 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
+        backgroundColor: Colors.white,
         title: Text(
           editCommand != null ? 'Edit Command' : 'Add Custom Command',
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.black87),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -606,31 +678,40 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
             children: [
               TextField(
                 controller: nameController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Colors.black87),
+                decoration: InputDecoration(
                   labelText: 'Command Name',
-                  labelStyle: TextStyle(color: Colors.white70),
+                  labelStyle: const TextStyle(color: Colors.black54),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: sequenceController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Colors.black87),
+                decoration: InputDecoration(
                   labelText: 'Hand Sign Sequence',
-                  labelStyle: TextStyle(color: Colors.white70),
+                  labelStyle: const TextStyle(color: Colors.black54),
                   hintText: '00001 → 01000',
-                  hintStyle: TextStyle(color: Colors.white38),
+                  hintStyle: const TextStyle(color: Colors.black26),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: selectedType,
-                dropdownColor: Colors.grey[800],
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
+                dropdownColor: Colors.white,
+                style: const TextStyle(color: Colors.black87),
+                decoration: InputDecoration(
                   labelText: 'Command Type',
-                  labelStyle: TextStyle(color: Colors.white70),
+                  labelStyle: const TextStyle(color: Colors.black54),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 items: const [
                   DropdownMenuItem(value: 'url', child: Text('Open URL')),
@@ -665,7 +746,10 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
               await _saveCommands();
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple,
+              foregroundColor: Colors.white,
+            ),
             child: Text(editCommand != null ? 'Update' : 'Add'),
           ),
         ],

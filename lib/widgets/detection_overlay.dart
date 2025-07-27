@@ -47,16 +47,20 @@ class DetectionOverlay extends StatelessWidget {
   Widget _buildConnectionStatus(ASLDetectionState state) {
     String statusText;
     IconData statusIcon;
+    Color iconColor;
 
     if (state is ASLDetectionLoading) {
       statusText = 'Connecting to server...';
       statusIcon = Icons.wifi_find;
+      iconColor = Colors.orange;
     } else if (state is ASLDetectionError) {
       statusText = 'Connection failed';
       statusIcon = Icons.wifi_off;
+      iconColor = Colors.red;
     } else {
       statusText = 'Initializing...';
       statusIcon = Icons.settings;
+      iconColor = Colors.blue;
     }
 
     return Positioned(
@@ -66,18 +70,25 @@ class DetectionOverlay extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.85),
+          color: Colors.white.withOpacity(0.95),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+          border: Border.all(color: Colors.black.withOpacity(0.1), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Icon(statusIcon, color: Colors.white, size: 32),
+            Icon(statusIcon, color: iconColor, size: 32),
             const SizedBox(height: 12),
             Text(
               statusText,
               style: const TextStyle(
-                color: Colors.white,
+                color: Colors.black87,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -92,12 +103,19 @@ class DetectionOverlay extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.85),
+        color: Colors.white.withOpacity(0.95),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: state.isStable ? Colors.white.withOpacity(0.4) : Colors.white.withOpacity(0.2),
-          width: 1,
+          color: state.isStable ? Colors.green.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
+          width: 2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -121,7 +139,7 @@ class DetectionOverlay extends StatelessWidget {
             const Text(
               'Hand Detection',
               style: TextStyle(
-                color: Colors.white,
+                color: Colors.black87,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -130,7 +148,7 @@ class DetectionOverlay extends StatelessWidget {
             Text(
               'Sign: ${state.currentSign}',
               style: const TextStyle(
-                color: Colors.white70,
+                color: Colors.black54,
                 fontSize: 14,
                 fontFamily: 'monospace',
               ),
@@ -140,8 +158,12 @@ class DetectionOverlay extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: state.isStable ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: state.isStable ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3),
+              width: 1,
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -150,15 +172,15 @@ class DetectionOverlay extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: state.isStable ? Colors.white : Colors.white.withOpacity(0.5),
+                  color: state.isStable ? Colors.green : Colors.orange,
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
               const SizedBox(width: 6),
               Text(
                 state.isStable ? 'STABLE' : 'MOVING',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: state.isStable ? Colors.green.shade700 : Colors.orange.shade700,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -174,15 +196,16 @@ class DetectionOverlay extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.grey.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
       ),
       child: Column(
         children: [
           const Text(
             'Finger Position',
             style: TextStyle(
-              color: Colors.white,
+              color: Colors.black87,
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -201,13 +224,17 @@ class DetectionOverlay extends StatelessWidget {
                     height: 60,
                     decoration: BoxDecoration(
                       color: isThumb
-                          ? Colors.white.withOpacity(0.1)
+                          ? Colors.grey.withOpacity(0.1)
                           : isUp
-                          ? Colors.white.withOpacity(0.3)
-                          : Colors.white.withOpacity(0.1),
+                          ? Colors.blue.withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
+                        color: isThumb
+                            ? Colors.grey.withOpacity(0.3)
+                            : isUp
+                            ? Colors.blue.withOpacity(0.4)
+                            : Colors.grey.withOpacity(0.3),
                         width: 1,
                       ),
                     ),
@@ -216,13 +243,17 @@ class DetectionOverlay extends StatelessWidget {
                       children: [
                         Icon(
                           isUp ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                          color: isThumb ? Colors.white.withOpacity(0.4) : Colors.white,
+                          color: isThumb
+                              ? Colors.grey
+                              : isUp
+                              ? Colors.blue.shade600
+                              : Colors.grey.shade600,
                           size: 20,
                         ),
                         if (isThumb)
                           Icon(
                             Icons.block,
-                            color: Colors.white.withOpacity(0.4),
+                            color: Colors.grey,
                             size: 12,
                           ),
                       ],
@@ -232,7 +263,7 @@ class DetectionOverlay extends StatelessWidget {
                   Text(
                     _getFingerName(index),
                     style: TextStyle(
-                      color: isThumb ? Colors.white.withOpacity(0.4) : Colors.white,
+                      color: isThumb ? Colors.grey : Colors.black87,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -241,7 +272,7 @@ class DetectionOverlay extends StatelessWidget {
                     Text(
                       'OFF',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.4),
+                        color: Colors.grey.shade600,
                         fontSize: 8,
                       ),
                     ),
@@ -260,8 +291,9 @@ class DetectionOverlay extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.grey.withOpacity(0.05),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
       ),
       child: Column(
         children: [
@@ -271,7 +303,7 @@ class DetectionOverlay extends StatelessWidget {
               const Text(
                 'Movement',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.black87,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -279,7 +311,7 @@ class DetectionOverlay extends StatelessWidget {
               Text(
                 '${movementPercentage.toStringAsFixed(1)}%',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black87,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -289,9 +321,9 @@ class DetectionOverlay extends StatelessWidget {
           const SizedBox(height: 8),
           LinearProgressIndicator(
             value: movementPercentage / 100,
-            backgroundColor: Colors.white.withOpacity(0.1),
+            backgroundColor: Colors.grey.withOpacity(0.2),
             valueColor: AlwaysStoppedAnimation<Color>(
-              Colors.white.withOpacity(0.6),
+              Colors.blue.shade600,
             ),
           ),
         ],
@@ -303,21 +335,28 @@ class DetectionOverlay extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withOpacity(0.95),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+        border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.gesture, color: Colors.white, size: 20),
+              Icon(Icons.gesture, color: Colors.blue.shade600, size: 20),
               const SizedBox(width: 8),
               const Text(
                 'Sequence Progress',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.black87,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -326,13 +365,14 @@ class DetectionOverlay extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.blue.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
                 ),
                 child: Text(
                   '${state.sequenceBuffer.length}/3',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: Colors.blue.shade700,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -350,13 +390,14 @@ class DetectionOverlay extends StatelessWidget {
                 margin: const EdgeInsets.only(right: 8, bottom: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.grey.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.withOpacity(0.3), width: 1),
                 ),
                 child: Text(
                   '${index + 1}. $sign',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black87,
                     fontSize: 12,
                     fontFamily: 'monospace',
                   ),
@@ -373,21 +414,29 @@ class DetectionOverlay extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withOpacity(0.95),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+        border: Border.all(color: Colors.green.withOpacity(0.3), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.green.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.green.withOpacity(0.3), width: 1),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.check_circle,
-              color: Colors.white,
+              color: Colors.green.shade600,
               size: 20,
             ),
           ),
@@ -399,7 +448,7 @@ class DetectionOverlay extends StatelessWidget {
                 const Text(
                   'Action Executed',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Colors.black54,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -408,7 +457,7 @@ class DetectionOverlay extends StatelessWidget {
                 Text(
                   state.lastAction!,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black87,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -421,7 +470,7 @@ class DetectionOverlay extends StatelessWidget {
               final cubit = context.read<ASLDetectionCubit>();
               return Icon(
                 cubit.isVibrationEnabled ? Icons.vibration : Icons.phone_android,
-                color: Colors.white,
+                color: cubit.isVibrationEnabled ? Colors.blue.shade600 : Colors.grey.shade600,
                 size: 18,
               );
             },

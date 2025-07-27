@@ -378,7 +378,7 @@ class CommandExecutor {
 
       // Method 1: Try calculator packages directly
       final calculatorPackages = [
-        'com.samsung.android.calculator',
+        'com.sec.android.app.popupcalculator',
         'com.google.android.calculator',
         'com.android.calculator2',
       ];

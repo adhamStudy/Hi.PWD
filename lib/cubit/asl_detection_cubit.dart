@@ -21,7 +21,7 @@ class ASLDetectionCubit extends Cubit<ASLDetectionState> {
   final CameraService _cameraService = CameraService();
   bool _isCameraInitialized = false;
 
-  static const String _wsUrl = 'ws://192.168.173.153:8765';
+  static const String _wsUrl = 'ws://31.97.192.169:80';
   String _currentWsUrl = _wsUrl;
 
   ASLDetectionCubit() : super(ASLDetectionInitial()) {

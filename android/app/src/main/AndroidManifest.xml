@@ -41,7 +41,7 @@
     </queries>
 
     <application
-        android:label="ASL Detection"
+        android:label="Hi.PWD"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
